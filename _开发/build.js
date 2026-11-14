@@ -15,6 +15,7 @@ const html = `<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="${title}">
 <meta name="theme-color" content="#EEF0E9">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>${title}</title>
 ${stylePart}
 </head>
