@@ -295,7 +295,7 @@
       <div class="read-row">
         <span class="read-label">读音</span>
         <button class="read-btn" id="readBtn" type="button">读一遍</button>
-        <span class="read-note">切换题后自动读</span>
+        <span class="read-note" id="voiceNote">正在加载语音…</span>
       </div>
       <p class="prompt">下面哪一个是它最准确的意思？</p>
       <div class="options" id="options"></div>
@@ -5911,6 +5911,35 @@
   var voices = [];
   function loadVoices(){
     try { voices = synth ? synth.getVoices() : []; } catch(e){ voices = []; }
+    updateVoiceNote();
+  }
+  function pickMandarinVoice(){
+    var zh = voices.filter(function(v){ return /^zh/i.test(v.lang); });
+    function first(list){ return list.find(function(v){ return v.localService; }) || list[0] || null; }
+    var cn = zh.filter(function(v){ return /^zh[-_]CN$/i.test(v.lang); });
+    var sg = zh.filter(function(v){ return /^zh[-_]SG$/i.test(v.lang); });
+    var tw = zh.filter(function(v){ return /^zh[-_]TW$/i.test(v.lang); });
+    var other = zh.filter(function(v){ return !/^zh[-_](HK|MO)$/i.test(v.lang) && !/^yue/i.test(v.lang); });
+    return first(cn) || first(sg) || first(tw) || first(other) || null;
+  }
+  function voiceLabel(v){
+    if(!v) return "未找到普通话语音";
+    if(/^zh[-_]CN$/i.test(v.lang)) return "普通话";
+    if(/^zh[-_]SG$/i.test(v.lang)) return "普通话（新加坡）";
+    if(/^zh[-_]TW$/i.test(v.lang)) return "普通话（台湾）";
+    return "中文语音";
+  }
+  function updateVoiceNote(){
+    var el = $("voiceNote"); if(!el) return;
+    if(!synth){ el.textContent = "此设备不支持读音"; return; }
+    if(!voices.length){ el.textContent = "正在加载语音…"; return; }
+    var v = pickMandarinVoice();
+    if(v){
+      el.textContent = voiceLabel(v) + " · " + v.name + " · 切换题后自动读";
+      el.title = v.lang;
+    }else{
+      el.textContent = "未找到普通话语音，请在系统设置里添加";
+    }
   }
   if(synth){
     loadVoices();
@@ -5932,8 +5961,7 @@
       u.pitch = 1;
       u.volume = 1;
       if(!voices.length) loadVoices();
-      var zh = voices.filter(function(v){ return /^zh/i.test(v.lang); });
-      var pick = zh.find(function(v){ return v.localService; }) || zh[0];
+      var pick = pickMandarinVoice();
       if(pick) u.voice = pick;
       synth.speak(u);
     }catch(e){}
